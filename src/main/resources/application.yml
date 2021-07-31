@@ -1,0 +1,4 @@
+jira:
+  host: <JIRA_HOST>
+  username: <JIRA_URSERNAME>
+  password: <JIRA_TOKEN>
