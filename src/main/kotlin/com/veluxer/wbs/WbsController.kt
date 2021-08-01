@@ -9,13 +9,15 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody
 import java.time.LocalDate
 
+
 @Controller
 class WbsController(private val jiraClient: JiraClient, private val jiraProperties: JiraProperties) {
-    @GetMapping
-    fun index(model: Model): String {
+    @GetMapping("/wbs")
+    fun wbs(model: Model): String {
         model.addAttribute("jiraHost", jiraProperties.host)
-        return "index"
+        return "wbs"
     }
+
 
     @GetMapping("/issues/{boardId}")
     @ResponseBody
@@ -49,7 +51,7 @@ data class IssueDto(
     val endDate: LocalDate?,
     val duration: Int?,
     val parent: Int,
-    val open: Boolean = true
+    val open: Boolean = true,
 ) {
     companion object {
         fun from(issue: Issue) = IssueDto(
