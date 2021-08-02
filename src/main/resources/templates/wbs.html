@@ -53,6 +53,19 @@
                 {name: "estimate", label: "시간", align: "center", width: 50},
             ];
 
+            gantt.plugins({
+                marker: true
+            });
+
+            var dateToStr = gantt.date.date_to_str(gantt.config.task_date);
+            var today = new Date();
+            gantt.addMarker({
+                start_date: today,
+                css: "today",
+                text: "Today",
+                title: "Today: " + dateToStr(today)
+            });
+
             gantt.init("gantt_here");
 
             function displayLink(task) {
