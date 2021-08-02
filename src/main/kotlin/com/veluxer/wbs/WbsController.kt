@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody
 import java.security.Principal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 
 @Controller
@@ -65,11 +65,11 @@ data class IssueDto(
     val status: String,
     val estimate: String,
     @JsonProperty("start_date")
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    val startDate: LocalDate?,
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+    val startDate: LocalDateTime?,
     @JsonProperty("end_date")
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    val endDate: LocalDate?,
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
+    val endDate: LocalDateTime?,
     val duration: Int?,
     val parent: Int,
     val open: Boolean = true,
@@ -83,8 +83,8 @@ data class IssueDto(
             assignee = issue.fields.assignee?.displayName.orEmpty(),
             status = issue.fields.status.name,
             estimate = issue.fields.timetracking.originalEstimate.orEmpty(),
-            startDate = issue.fields.startAt,
-            endDate = issue.fields.endAt,
+            startDate = issue.fields.startAt?.atStartOfDay(),
+            endDate = issue.fields.endAt?.atTime(23, 59),
             duration = if (issue.fields.endAt != null && issue.fields.startAt != null) {
                 issue.fields.endAt.compareTo(issue.fields.startAt).plus(1)
             } else null,
