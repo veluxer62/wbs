@@ -2,16 +2,37 @@ package com.veluxer.wbs
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody
+import java.security.Principal
 import java.time.LocalDate
 
 
 @Controller
-class WbsController(private val jiraClient: JiraClient, private val jiraProperties: JiraProperties) {
+class WbsController(
+    private val jiraClient: JiraClient,
+    private val jiraProperties: JiraProperties,
+    private val appProperties: AppProperties,
+) {
+    @GetMapping
+    fun index() = "login"
+
+    @GetMapping("/login")
+    fun login(principal: Principal): String {
+        val token = principal as OAuth2AuthenticationToken
+        val email = token.principal.attributes["email"].toString()
+
+        return if (email.endsWith("@${appProperties.allowDomain}")) {
+            "redirect:/wbs"
+        } else {
+            "redirect:/logout"
+        }
+    }
+
     @GetMapping("/wbs")
     fun wbs(model: Model): String {
         model.addAttribute("jiraHost", jiraProperties.host)

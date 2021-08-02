@@ -1,4 +1,14 @@
+app:
+  allow-domain: <ALLOW_DOMAIN>
 jira:
   host: <JIRA_HOST>
   username: <JIRA_URSERNAME>
   password: <JIRA_TOKEN>
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: <GOOGLE_CLIENT_ID>
+            client-secret: <GOOGLE_CLIENT_SECRET>
