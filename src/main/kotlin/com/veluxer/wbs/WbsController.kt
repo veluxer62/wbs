@@ -119,7 +119,7 @@ data class IssueDto(
             id = Int.MAX_VALUE,
             key = "NO-EPIC",
             type = "epic",
-            title = "백로그 없는 이슈",
+            title = "에픽 없는 이슈",
             assignee = "",
             status = "",
             estimate = "",
