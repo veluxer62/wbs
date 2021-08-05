@@ -27,15 +27,19 @@ class WbsController(
         val email = token.principal.attributes["email"].toString()
 
         return if (email.endsWith("@${appProperties.allowDomain}")) {
-            "redirect:/wbs"
+            "redirect:/boards"
         } else {
             "redirect:/logout"
         }
     }
 
-    @GetMapping("/wbs")
-    fun wbs(model: Model): String {
+    @GetMapping("/boards")
+    fun boards() = "boards"
+
+    @GetMapping("/wbs/{boardId}")
+    fun wbs(@PathVariable("boardId") boardId: Int, model: Model): String {
         model.addAttribute("jiraHost", jiraProperties.host)
+        model.addAttribute("boardId", boardId)
         return "wbs"
     }
 

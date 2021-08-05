@@ -40,7 +40,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js?_ga=2.102196552.832467384.1627715698-2029860722.1627220630" ></script>
     <script>
-        $.get("/issues/288", function(issues) {
+        $.get("/issues/[[${boardId}]]", function (issues) {
             gantt.config.readonly = true;
             gantt.config.date_format = "%Y-%m-%d %H:%i";
             gantt.config.autofit = false;
