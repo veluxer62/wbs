@@ -2,28 +2,33 @@ package com.veluxer.wbs
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import org.springframework.stereotype.Component
-import org.springframework.web.client.RestTemplate
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
 @Component
-class JiraClient(private val jiraTemplate: RestTemplate) {
+class JiraClient(private val jiraWebClient: WebClient) {
 
-    fun getActiveSprint(boardId: Int): List<Sprint> {
-        val response = jiraTemplate.getForEntity(
-            "/rest/agile/1.0/board/$boardId/sprint?state=active",
-            AllSprintsResponseBody::class.java
-        )
-        return response.body?.sprints.orEmpty()
+    suspend fun getActiveSprint(boardId: Int): Flow<Sprint> {
+        return jiraWebClient.get()
+            .uri("/rest/agile/1.0/board/$boardId/sprint?state=active")
+            .retrieve()
+            .awaitBody<AllSprintsResponseBody>()
+            .sprints
+            .asFlow()
     }
 
-    fun getIssuesForSprint(sprintId: Int): List<Issue> {
-        val response = jiraTemplate.getForEntity(
-            "/rest/agile/1.0/sprint/$sprintId/issue?maxResults=10000",
-            IssuesForSprintResponseBody::class.java
-        )
-        return response.body?.issues.orEmpty()
+    suspend fun getIssuesForSprint(sprintId: Int): Flow<Issue> {
+        return jiraWebClient.get()
+            .uri("/rest/agile/1.0/sprint/$sprintId/issue?maxResults=10000")
+            .retrieve()
+            .awaitBody<IssuesForSprintResponseBody>()
+            .issues
+            .asFlow()
     }
 
 }

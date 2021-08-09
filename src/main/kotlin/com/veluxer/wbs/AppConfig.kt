@@ -3,11 +3,8 @@ package com.veluxer.wbs
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.core.Authentication
@@ -19,7 +16,8 @@ import org.springframework.security.web.server.WebFilterExchange
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
-import org.springframework.web.client.RestTemplate
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions
+import org.springframework.web.reactive.function.client.WebClient
 import java.net.URI
 
 
@@ -28,11 +26,11 @@ import java.net.URI
 class AppConfig {
 
     @Bean
-    fun jiraTemplate(jiraProperties: JiraProperties): RestTemplate {
-        return RestTemplateBuilder()
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .basicAuthentication(jiraProperties.username, jiraProperties.password)
-            .rootUri(jiraProperties.host)
+    fun jiraWebClient(jiraProperties: JiraProperties): WebClient {
+        return WebClient.builder()
+            .baseUrl(jiraProperties.host)
+            .filter(ExchangeFilterFunctions.basicAuthentication(jiraProperties.username, jiraProperties.password))
+            .codecs { it.defaultCodecs().maxInMemorySize(-1) }
             .build()
     }
 

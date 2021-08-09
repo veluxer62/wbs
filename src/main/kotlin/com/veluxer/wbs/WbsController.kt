@@ -2,6 +2,14 @@ package com.veluxer.wbs
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -29,19 +37,23 @@ class WbsController(
     }
 
 
+    @Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
+    @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @GetMapping("/issues/{boardId}")
     @ResponseBody
-    fun getIssues(@PathVariable("boardId") boardId: Int): List<IssueDto> {
+    suspend fun getIssues(@PathVariable("boardId") boardId: Int): Flow<IssueDto> {
         val sprints = jiraClient.getActiveSprint(boardId)
-        val issues = sprints.flatMap { jiraClient.getIssuesForSprint(it.id) }
-        val epics = issues.filter { it.fields.epic != null }.map { it.fields.epic!! }.distinct()
+        val issues = sprints.flatMapMerge {
+            jiraClient.getIssuesForSprint(it.id)
+        }
 
+        val epics = issues.filter { it.fields.epic != null }.map { it.fields.epic!! }.distinctUntilChanged()
         val tasks = issues.filter { it.fields.issuetype.name != "Sub-task" }.map { IssueDto.from(it) }
         val epicIssue = epics.map { IssueDto.from(it) }
         val unknownEpicIssue = IssueDto.createUnknownEpicIssue()
         val bugEpicIssue = IssueDto.createBugEpicIssue()
 
-        return tasks + epicIssue + unknownEpicIssue + bugEpicIssue
+        return merge(tasks, epicIssue, flowOf(unknownEpicIssue, bugEpicIssue))
     }
 }
 
