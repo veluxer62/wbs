@@ -8,13 +8,19 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
-import org.springframework.security.web.csrf.CsrfFilter
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.core.Authentication
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException
+import org.springframework.security.web.server.DefaultServerRedirectStrategy
+import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.WebFilterExchange
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationFailureHandler
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.filter.CharacterEncodingFilter
+import java.net.URI
 
 
 @Configuration
@@ -32,39 +38,48 @@ class AppConfig {
 
 }
 
-@Configuration
-@EnableWebSecurity
-class SecurityConfig : WebSecurityConfigurerAdapter() {
+@EnableWebFluxSecurity
+class SecurityConfig(private val appProperties: AppProperties) {
 
-    override fun configure(http: HttpSecurity) {
-        val filter = CharacterEncodingFilter()
-        http
-            .authorizeRequests()
-            .antMatchers("/", "/oauth2/**", "/login/**").permitAll()
-            .anyRequest().authenticated()
-            .and()
-            .oauth2Login()
-            .defaultSuccessUrl("/login")
-            .failureUrl("/")
-            .and()
-            .headers().frameOptions().disable()
-            .and()
-            .exceptionHandling()
-            .authenticationEntryPoint(LoginUrlAuthenticationEntryPoint("/"))
-            .and()
-            .formLogin()
-            .successForwardUrl("/wbs")
+    @Bean
+    fun configure(http: ServerHttpSecurity): SecurityWebFilterChain {
+        return http.authorizeExchange()
+            .pathMatchers("/", "/oauth2/**", "/login/**").permitAll()
+            .anyExchange().authenticated()
             .and()
             .logout()
             .logoutUrl("/logout")
-            .logoutSuccessUrl("/")
-            .deleteCookies("JSESSIONID")
-            .invalidateHttpSession(true)
+            .logoutSuccessHandler(logoutSuccessHandler())
             .and()
-            .addFilterBefore(filter, CsrfFilter::class.java)
-            .csrf().disable()
+            .oauth2Login()
+            .authenticationSuccessHandler(authenticationSuccessHandler())
+            .authenticationFailureHandler(RedirectServerAuthenticationFailureHandler("/"))
+            .and().csrf().disable()
+            .build()
     }
+
+    private fun authenticationSuccessHandler() =
+        { webFilterExchange: WebFilterExchange, authentication: Authentication ->
+            val exchange = webFilterExchange.exchange
+
+            val token = authentication as OAuth2AuthenticationToken
+            val email = token.principal.attributes["email"].toString()
+
+            if (!email.endsWith("@${appProperties.allowDomain}")) {
+                throw OAuth2AuthenticationException("403")
+            }
+
+            DefaultServerRedirectStrategy().sendRedirect(exchange, URI.create("/boards"))
+        }
+
+    fun logoutSuccessHandler(): ServerLogoutSuccessHandler {
+        val handler = RedirectServerLogoutSuccessHandler()
+        handler.setLogoutSuccessUrl(URI.create("/"))
+        return handler
+    }
+
 }
+
 
 @ConstructorBinding
 @ConfigurationProperties("jira")
