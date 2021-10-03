@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Controller
 class WbsController(
@@ -76,27 +77,34 @@ data class IssueDto(
     val open: Boolean = true,
 ) {
     companion object {
-        fun from(issue: Issue) = IssueDto(
-            id = issue.id.toInt(),
-            key = issue.key,
-            type = issue.fields.issuetype.name,
-            title = issue.fields.summary,
-            assignee = issue.fields.assignee?.displayName.orEmpty(),
-            status = issue.fields.status.name,
-            estimate = issue.fields.timetracking.originalEstimate.orEmpty(),
-            startDate = issue.fields.startAt?.atStartOfDay(),
-            endDate = issue.fields.endAt?.atTime(23, 59),
-            duration = if (issue.fields.endAt != null && issue.fields.startAt != null) {
-                issue.fields.endAt.compareTo(issue.fields.startAt).plus(1)
-            } else null,
-            parent = if (issue.fields.epic != null) {
-                issue.fields.epic.id
-            } else if (issue.fields.issuetype.name == "Bug") {
-                Int.MAX_VALUE - 1
-            } else {
-                Int.MAX_VALUE
-            }
-        )
+        fun from(issue: Issue): IssueDto {
+            val startDate = issue.fields.startAt?.atStartOfDay()
+                ?: issue.fields.created.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDate().atStartOfDay()
+            val endDate = issue.fields.endAt?.atTime(23, 59)
+                ?: issue.fields.updated.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDate().atTime(23, 59)
+
+            return IssueDto(
+                id = issue.id.toInt(),
+                key = issue.key,
+                type = issue.fields.issuetype.name,
+                title = issue.fields.summary,
+                assignee = issue.fields.assignee?.displayName.orEmpty(),
+                status = issue.fields.status.name,
+                estimate = issue.fields.timetracking.originalEstimate.orEmpty(),
+                startDate = startDate,
+                endDate = endDate,
+                duration = if (issue.fields.endAt != null && issue.fields.startAt != null) {
+                    issue.fields.endAt.compareTo(issue.fields.startAt).plus(1)
+                } else null,
+                parent = if (issue.fields.epic != null) {
+                    issue.fields.epic.id
+                } else if (issue.fields.issuetype.name == "Bug") {
+                    Int.MAX_VALUE - 1
+                } else {
+                    Int.MAX_VALUE
+                }
+            )
+        }
 
         fun from(epic: Epic) = IssueDto(
             id = epic.id,
