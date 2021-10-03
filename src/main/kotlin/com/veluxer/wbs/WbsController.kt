@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.ResponseBody
 import java.time.LocalDateTime
 
-
 @Controller
 class WbsController(
     private val jiraClient: JiraClient,
@@ -35,7 +34,6 @@ class WbsController(
         model.addAttribute("boardId", boardId)
         return "wbs"
     }
-
 
     @Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
     @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
