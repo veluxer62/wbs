@@ -23,13 +23,13 @@ class WbsController(
     private val jiraProperties: JiraProperties,
 ) {
     @GetMapping
-    fun index() = "login"
+    suspend fun index() = "login"
 
     @GetMapping("/boards")
-    fun boards() = "boards"
+    suspend fun boards() = "boards"
 
     @GetMapping("/wbs/{boardId}")
-    fun wbs(@PathVariable("boardId") boardId: Int, model: Model): String {
+    suspend fun wbs(@PathVariable("boardId") boardId: Int, model: Model): String {
         model.addAttribute("jiraHost", jiraProperties.host)
         model.addAttribute("boardId", boardId)
         return "wbs"
