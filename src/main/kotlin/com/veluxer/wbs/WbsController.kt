@@ -2,6 +2,7 @@ package com.veluxer.wbs
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -37,7 +38,7 @@ class WbsController(
     }
 
     @Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
-    @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @OptIn(FlowPreview::class)
     @GetMapping("/issues/{boardId}")
     @ResponseBody
     suspend fun getIssues(@PathVariable("boardId") boardId: Int): Flow<IssueDto> {
@@ -46,6 +47,19 @@ class WbsController(
             jiraClient.getIssuesForSprint(it.id)
         }
 
+        return makeIssueForWbs(issues)
+    }
+
+    @GetMapping("/kanban/{boardId}/issues")
+    @ResponseBody
+    suspend fun getKanbanIssues(@PathVariable("boardId") boardId: Int): Flow<IssueDto> {
+        val issues = jiraClient.getIssuesForKanban(boardId)
+        return makeIssueForWbs(issues)
+    }
+
+    @Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun makeIssueForWbs(issues: Flow<Issue>): Flow<IssueDto> {
         val epics = issues.filter { it.fields.epic != null }.map { it.fields.epic!! }.distinctUntilChanged()
         val tasks = issues
             .filter { it.fields.issuetype.name != "Sub-task" && it.fields.issuetype.name != "Story" }
