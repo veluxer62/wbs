@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -31,9 +32,14 @@ class WbsController(
     suspend fun boards() = "boards"
 
     @GetMapping("/wbs/{boardId}")
-    suspend fun wbs(@PathVariable("boardId") boardId: Int, model: Model): String {
+    suspend fun wbs(
+        @PathVariable("boardId") boardId: Int,
+        @RequestParam(name = "type", required = false) type: String,
+        model: Model,
+    ): String {
         model.addAttribute("jiraHost", jiraProperties.host)
         model.addAttribute("boardId", boardId)
+        model.addAttribute("type", type)
         return "wbs"
     }
 
