@@ -1,5 +1,6 @@
 package com.veluxer.wbs
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +62,10 @@ data class IssueFields(
     val startAt: LocalDate? = null,
     @JsonProperty("customfield_11300")
     val endAt: LocalDate? = null,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    val created: ZonedDateTime,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    val updated: ZonedDateTime,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
