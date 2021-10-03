@@ -24,13 +24,16 @@ class JiraClient(private val jiraWebClient: WebClient) {
 
     suspend fun getIssuesForSprint(sprintId: Int): Flow<Issue> {
         return jiraWebClient.get()
-            .uri("/rest/agile/1.0/sprint/$sprintId/issue?maxResults=10000")
+            .uri(
+                "/rest/agile/1.0/sprint/$sprintId/issue" +
+                    "?maxResults=10000" +
+                    "&fields=issuetype,summary,assignee,status,timetracking,customfield_11811,customfield_11300,epic,created,updated"
+            )
             .retrieve()
             .awaitBody<IssuesForSprintResponseBody>()
             .issues
             .asFlow()
     }
-
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
