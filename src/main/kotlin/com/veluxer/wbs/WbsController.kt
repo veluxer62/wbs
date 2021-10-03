@@ -46,7 +46,9 @@ class WbsController(
         }
 
         val epics = issues.filter { it.fields.epic != null }.map { it.fields.epic!! }.distinctUntilChanged()
-        val tasks = issues.filter { it.fields.issuetype.name != "Sub-task" }.map { IssueDto.from(it) }
+        val tasks = issues
+            .filter { it.fields.issuetype.name != "Sub-task" && it.fields.issuetype.name != "Story" }
+            .map { IssueDto.from(it) }
         val epicIssue = epics.map { IssueDto.from(it) }
         val unknownEpicIssue = IssueDto.createUnknownEpicIssue()
         val bugEpicIssue = IssueDto.createBugEpicIssue()
